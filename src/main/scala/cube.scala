@@ -5,12 +5,12 @@
  */
 
 abstract class Face()
-case class Front() extends Face
-case class Top() extends Face
-case class Back() extends Face
-case class Down() extends Face
-case class Left() extends Face
-case class Right() extends Face
+case class FrontFace() extends Face
+case class TopFace() extends Face
+case class BackFace() extends Face
+case class DownFace() extends Face
+case class LeftFace() extends Face
+case class RightFace() extends Face
 
 abstract class SimpleRotation()
 case class SimpleX() extends SimpleRotation
@@ -46,12 +46,12 @@ case class SimpleCube(front: String, top: String, down: String, left: String, ri
 
   def toString(face: Face): String ={
     face match {
-      case Front() => _front
-      case Top() => _top
-      case Back() => _back
-      case Down() => _down
-      case Left() => _left
-      case Right() => _right
+      case FrontFace() => _front
+      case TopFace() => _top
+      case BackFace() => _back
+      case DownFace() => _down
+      case LeftFace() => _left
+      case RightFace() => _right
     }
   }
 
@@ -71,13 +71,13 @@ abstract class Rotation {
 
 case class cubeZ() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    val swaps = Seq(Step(1,7),Step(7,5),Step(5,3),
-      Step(0,6),Step(6,4),Step(4,2),
-      Step(10,16),Step(16,14),Step(14,12),
-      Step(9,15),Step(15,13),Step(13,11),
-      Step(18,24),Step(24,22),Step(22,20),
-      Step(17,23),Step(23,21),Step(21,19))
-    val f = new RubiksCube(c._cube.map(p=>p.apply(SimpleZ())))
+    val frontfaceZ = List(Step(1,7),Step(7,5),Step(5,3),
+                          Step(0,6),Step(6,4),Step(4,2))
+    val midfaceZ = frontfaceZ.map{case Step(a,b)=>Step(a+9,b+9)}
+    val backfaceZ = midfaceZ.map{case Step(a,b)=>Step(a+9,b+9)}
+
+    val swaps = frontfaceZ ::: midfaceZ ::: backfaceZ
+    val f = new RubiksCube(c._cube.map(p => p.apply(SimpleZ())))
     f.apply(swaps)
   }
 }
@@ -88,12 +88,16 @@ case class cubeZInverted() extends Rotation {
 }
 case class cubeX() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    val swaps = Seq(Step(0,6), Step(6,23),Step(23,17),
-      Step(9,7), Step(7,15),Step(15,24),
-      Step(1,5), Step(5,22), Step(22,18),
-      Step(9,8), Step(8,14), Step(14,25),
-      Step(2,4), Step(4,21), Step(21,19),
-      Step(11,3), Step(3,13), Step(13,20))
+    val leftFace = List(Step(0,6), Step(6,23),Step(23,17),
+                        Step(7,15),Step(15,24),Step(24,9))
+
+    val middleFace = List(Step(1,5), Step(5,22),Step(22,18),
+                          Step(8,14),Step(14,25),Step(25,10))
+
+    val rightFace = List(Step(2,4), Step(4,21),Step(21,19),
+                         Step(3,13),Step(13,20),Step(20,11))
+
+    val swaps = leftFace ::: middleFace ::: rightFace
     val f = new RubiksCube(c._cube.map(p=>p.apply(SimpleX())))
     f.apply(swaps)
   }
@@ -105,12 +109,15 @@ case class cubeXInverted() extends Rotation {
 }
 case class cubeY() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    val swaps = Seq(Step(0,2), Step(2,19), Step(19,17),
-      Step(1,11), Step(11,18), Step(18,9),
-      Step(7,3), Step(3,20), Step(20,24),
-      Step(8,12), Step(12,25), Step(25,16),
-      Step(6,4), Step(4,21), Step(21,23),
-      Step(5,13), Step(13,22), Step(22,16))
+    val topFace = List(Step(0,2), Step(2,19), Step(19,17),
+                       Step(1,11), Step(11,18), Step(18,9))
+
+    val middleFace = List(Step(7,3), Step(3,20), Step(20,24),
+                          Step(8,12), Step(12,25), Step(25,16))
+
+    val bottomFace = List(Step(6,4), Step(4,21), Step(21,23),
+                          Step(5,13), Step(13,22), Step(22,15))
+    val swaps = topFace ::: middleFace ::: bottomFace
 
     val f = new RubiksCube(c._cube.map(p=>p.apply(SimpleY())))
     f.apply(swaps)
@@ -230,24 +237,24 @@ class RubiksCube (pieces: Array[SimpleCube]) {
 
   override def toString() : String = {
     val space = " ".padTo(5, ' ')
-    f"${space} ${space} ${_cube.apply(17).toString(Top())} ${_cube.apply(18).toString(Top())} ${_cube.apply(19).toString(Top())}\n" +
-    f"${space} ${space} ${_cube.apply(9).toString(Top())} ${_cube.apply(10).toString(Top())} ${_cube.apply(11).toString(Top())}\n" +
-    f"${space} ${space} ${_cube.apply(0).toString(Top())} ${_cube.apply(1).toString(Top())} ${_cube.apply(2).toString(Top())}\n" +
-    f"${_cube.apply(17).toString(Back())} ${_cube.apply(18).toString(Back())} ${_cube.apply(19).toString(Back())} " +
-    f"${_cube.apply(19).toString(Left())} ${_cube.apply(9).toString(Left())} ${_cube.apply(0).toString(Left())} " +
-    f"${_cube.apply(0).toString(Front())} ${_cube.apply(1).toString(Front())} ${_cube.apply(2).toString(Front())} " +
-      f"${_cube.apply(2).toString(Right())} ${_cube.apply(11).toString(Right())} ${_cube.apply(19).toString(Right())}\n" +
-    f"${_cube.apply(24).toString(Back())} ${_cube.apply(25).toString(Back())} ${_cube.apply(20).toString(Back())} " +
-    f"${_cube.apply(24).toString(Left())} ${_cube.apply(16).toString(Left())} ${_cube.apply(7).toString(Left())} " +
-    f"${_cube.apply(7).toString(Front())} ${_cube.apply(8).toString(Front())} ${_cube.apply(3).toString(Front())} " +
-     f"${_cube.apply(2).toString(Right())} ${_cube.apply(12).toString(Right())} ${_cube.apply(20).toString(Right())} \n" +
-    f"${_cube.apply(23).toString(Back())} ${_cube.apply(22).toString(Back())} ${_cube.apply(21).toString(Back())} " +
-    f"${_cube.apply(23).toString(Left())} ${_cube.apply(15).toString(Left())} ${_cube.apply(6).toString(Left())} " +
-    f"${_cube.apply(6).toString(Front())} ${_cube.apply(5).toString(Front())} ${_cube.apply(4).toString(Front())} " +
-     f"${_cube.apply(4).toString(Right())} ${_cube.apply(13).toString(Right())} ${_cube.apply(21).toString(Right())} \n" +
-    f"${space} ${space} ${_cube.apply(6).toString(Down())} ${_cube.apply(5).toString(Down())} ${_cube.apply(4).toString(Down())}\n" +
-    f"${space} ${space} ${_cube.apply(15).toString(Down())} ${_cube.apply(14).toString(Down())} ${_cube.apply(13).toString(Down())}\n" +
-      f"${space} ${space} ${_cube.apply(23).toString(Down())} ${_cube.apply(22).toString(Down())} ${_cube.apply(21).toString(Down())}\n"
+    f"${space} ${space} ${_cube.apply(17).toString(TopFace())} ${_cube.apply(18).toString(TopFace())} ${_cube.apply(19).toString(TopFace())}\n" +
+    f"${space} ${space} ${_cube.apply(9).toString(TopFace())} ${_cube.apply(10).toString(TopFace())} ${_cube.apply(11).toString(TopFace())}\n" +
+    f"${space} ${space} ${_cube.apply(0).toString(TopFace())} ${_cube.apply(1).toString(TopFace())} ${_cube.apply(2).toString(TopFace())}\n" +
+    f"${_cube.apply(17).toString(BackFace())} ${_cube.apply(18).toString(BackFace())} ${_cube.apply(19).toString(BackFace())} " +
+    f"${_cube.apply(19).toString(LeftFace())} ${_cube.apply(9).toString(LeftFace())} ${_cube.apply(0).toString(LeftFace())} " +
+    f"${_cube.apply(0).toString(FrontFace())} ${_cube.apply(1).toString(FrontFace())} ${_cube.apply(2).toString(FrontFace())} " +
+      f"${_cube.apply(2).toString(RightFace())} ${_cube.apply(11).toString(RightFace())} ${_cube.apply(19).toString(RightFace())}\n" +
+    f"${_cube.apply(24).toString(BackFace())} ${_cube.apply(25).toString(BackFace())} ${_cube.apply(20).toString(BackFace())} " +
+    f"${_cube.apply(24).toString(LeftFace())} ${_cube.apply(16).toString(LeftFace())} ${_cube.apply(7).toString(LeftFace())} " +
+    f"${_cube.apply(7).toString(FrontFace())} ${_cube.apply(8).toString(FrontFace())} ${_cube.apply(3).toString(FrontFace())} " +
+     f"${_cube.apply(2).toString(RightFace())} ${_cube.apply(12).toString(RightFace())} ${_cube.apply(20).toString(RightFace())} \n" +
+    f"${_cube.apply(23).toString(BackFace())} ${_cube.apply(22).toString(BackFace())} ${_cube.apply(21).toString(BackFace())} " +
+    f"${_cube.apply(23).toString(LeftFace())} ${_cube.apply(15).toString(LeftFace())} ${_cube.apply(6).toString(LeftFace())} " +
+    f"${_cube.apply(6).toString(FrontFace())} ${_cube.apply(5).toString(FrontFace())} ${_cube.apply(4).toString(FrontFace())} " +
+     f"${_cube.apply(4).toString(RightFace())} ${_cube.apply(13).toString(RightFace())} ${_cube.apply(21).toString(RightFace())} \n" +
+    f"${space} ${space} ${_cube.apply(6).toString(DownFace())} ${_cube.apply(5).toString(DownFace())} ${_cube.apply(4).toString(DownFace())}\n" +
+    f"${space} ${space} ${_cube.apply(15).toString(DownFace())} ${_cube.apply(14).toString(DownFace())} ${_cube.apply(13).toString(DownFace())}\n" +
+      f"${space} ${space} ${_cube.apply(23).toString(DownFace())} ${_cube.apply(22).toString(DownFace())} ${_cube.apply(21).toString(DownFace())}\n"
   }
 
   val _cube : Array[SimpleCube] = pieces
