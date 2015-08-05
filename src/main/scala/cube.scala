@@ -83,7 +83,7 @@ case class cubeZ() extends Rotation {
 }
 case class cubeZInverted() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    cubeZ().apply(cubeZ().apply(cubeZ().apply(c)))
+    c.rotate(cubeZ(),cubeZ(),cubeZ())
   }
 }
 case class cubeX() extends Rotation {
@@ -100,7 +100,7 @@ case class cubeX() extends Rotation {
 }
 case class cubeXInverted() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    cubeX().apply(cubeX().apply(cubeX().apply(c)))
+    c.rotate(cubeX(),cubeX(),cubeX())
   }
 }
 case class cubeY() extends Rotation {
@@ -124,32 +124,33 @@ case class cubeYInverted() extends Rotation {
 case class front() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
     val swaps = Seq(Step(0,6),
-      Step(6,4),
-      Step(4,2),
-      Step(1,7),
-      Step(7,5),
-      Step(5,3))
+                  Step(6,4),
+                  Step(4,2),
+                  Step(1,7),
+                  Step(7,5),
+                  Step(5,3))
 
     val blocks = swaps.flatMap(x=>Seq(x.dest,x.source)).distinct.toArray
     val gah = c._cube.clone()
+    // rotate the components of the cube at the block level
     for( i <- (0 to gah.length)){
       if (blocks.contains(i)) {
         gah.update(i,gah.apply(i).apply(SimpleZ()))
       }
     }
-
+    // now move the blocks of the cube to their new positions
     val f = new RubiksCube(gah)
     f.apply(swaps)
   }
 }
 case class frontInverted() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    front().apply(front().apply(front().apply(c)))
+    c.rotate(front(),front(),front())
   }
 }
 case class top() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    cubeZ().apply(front().apply(cubeZInverted().apply(c)))
+    c.rotate(cubeXInverted(),front(),cubeX())
   }
 }
 case class topInverted() extends Rotation {
@@ -251,9 +252,8 @@ class RubiksCube (pieces: Array[SimpleCube]) {
 
   val _cube : Array[SimpleCube] = pieces
 
-  def rotate(rotation: Rotation) : RubiksCube = {
-    rotation.apply(this)
-  }
+  def rotate(a:Rotation*) : RubiksCube = a.foldLeft(this)((cube,rotation)=> rotation.apply(cube))
+
   override def clone() : RubiksCube = {new RubiksCube(_cube.clone())}
 
   def apply(swaps: Seq[Step]): RubiksCube = {
