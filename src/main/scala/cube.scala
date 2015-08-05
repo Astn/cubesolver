@@ -70,13 +70,13 @@ abstract class Rotation {
 }
 
 case class cubeZ() extends Rotation {
-  override def apply(c: RubiksCube):RubiksCube = {
-    val frontfaceZ = List(Step(1,7),Step(7,5),Step(5,3),
-                          Step(0,6),Step(6,4),Step(4,2))
-    val midfaceZ = frontfaceZ.map{case Step(a,b)=>Step(a+9,b+9)}
-    val backfaceZ = midfaceZ.map{case Step(a,b)=>Step(a+9,b+9)}
+  val frontfaceZ = List(Step(1,7),Step(7,5),Step(5,3),
+                        Step(0,6),Step(6,4),Step(4,2))
+  val midfaceZ = frontfaceZ.map{case Step(a,b)=>Step(a+9,b+9)}
+  val backfaceZ = midfaceZ.map{case Step(a,b)=>Step(a+9,b+9)}
 
-    val swaps = frontfaceZ ::: midfaceZ ::: backfaceZ
+  val swaps = frontfaceZ ::: midfaceZ ::: backfaceZ
+  override def apply(c: RubiksCube):RubiksCube = {
     val f = new RubiksCube(c._cube.map(p => p.apply(SimpleZ())))
     f.apply(swaps)
   }
@@ -87,17 +87,17 @@ case class cubeZInverted() extends Rotation {
   }
 }
 case class cubeX() extends Rotation {
+  val leftFace = List(Step(0,6), Step(6,23),Step(23,17),
+    Step(7,15),Step(15,24),Step(24,9))
+
+  val middleFace = List(Step(1,5), Step(5,22),Step(22,18),
+    Step(8,14),Step(14,25),Step(25,10))
+
+  val rightFace = List(Step(2,4), Step(4,21),Step(21,19),
+    Step(3,13),Step(13,20),Step(20,11))
+
+  val swaps = leftFace ::: middleFace ::: rightFace
   override def apply(c: RubiksCube):RubiksCube = {
-    val leftFace = List(Step(0,6), Step(6,23),Step(23,17),
-                        Step(7,15),Step(15,24),Step(24,9))
-
-    val middleFace = List(Step(1,5), Step(5,22),Step(22,18),
-                          Step(8,14),Step(14,25),Step(25,10))
-
-    val rightFace = List(Step(2,4), Step(4,21),Step(21,19),
-                         Step(3,13),Step(13,20),Step(20,11))
-
-    val swaps = leftFace ::: middleFace ::: rightFace
     val f = new RubiksCube(c._cube.map(p=>p.apply(SimpleX())))
     f.apply(swaps)
   }
@@ -108,17 +108,16 @@ case class cubeXInverted() extends Rotation {
   }
 }
 case class cubeY() extends Rotation {
+  val topFace = List(Step(0,2), Step(2,19), Step(19,17),
+    Step(1,11), Step(11,18), Step(18,9))
+
+  val middleFace = List(Step(7,3), Step(3,20), Step(20,24),
+    Step(8,12), Step(12,25), Step(25,16))
+
+  val bottomFace = List(Step(6,4), Step(4,21), Step(21,23),
+    Step(5,13), Step(13,22), Step(22,15))
+  val swaps = topFace ::: middleFace ::: bottomFace
   override def apply(c: RubiksCube):RubiksCube = {
-    val topFace = List(Step(0,2), Step(2,19), Step(19,17),
-                       Step(1,11), Step(11,18), Step(18,9))
-
-    val middleFace = List(Step(7,3), Step(3,20), Step(20,24),
-                          Step(8,12), Step(12,25), Step(25,16))
-
-    val bottomFace = List(Step(6,4), Step(4,21), Step(21,23),
-                          Step(5,13), Step(13,22), Step(22,15))
-    val swaps = topFace ::: middleFace ::: bottomFace
-
     val f = new RubiksCube(c._cube.map(p=>p.apply(SimpleY())))
     f.apply(swaps)
   }
@@ -129,15 +128,14 @@ case class cubeYInverted() extends Rotation {
   }
 }
 case class front() extends Rotation {
+  val swaps = List(Step(0,6),
+    Step(6,4),
+    Step(4,2),
+    Step(1,7),
+    Step(7,5),
+    Step(5,3))
+  val blocks = swaps.flatMap(x=>Seq(x.dest,x.source)).distinct.toArray
   override def apply(c: RubiksCube):RubiksCube = {
-    val swaps = Seq(Step(0,6),
-                  Step(6,4),
-                  Step(4,2),
-                  Step(1,7),
-                  Step(7,5),
-                  Step(5,3))
-
-    val blocks = swaps.flatMap(x=>Seq(x.dest,x.source)).distinct.toArray
     val gah = c._cube.clone()
     // rotate the components of the cube at the block level
     for( i <- (0 to gah.length)){
@@ -162,47 +160,47 @@ case class top() extends Rotation {
 }
 case class topInverted() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    top().apply(top().apply(top().apply(c)))
+    c.rotate(top(),top(),top())
   }
 }
 case class down() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    cubeZInverted().apply(front().apply(cubeZ().apply(c)))
+    c.rotate(cubeZ(),front(),cubeZInverted())
   }
 }
 case class downInverted() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    down().apply(down().apply(down().apply(c)))
+    c.rotate(down(),down(),down())
   }
 }
 case class right() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    cubeY().apply(front().apply(cubeYInverted().apply(c)))
+    c.rotate(cubeYInverted(),front(),cubeY())
   }
 }
 case class rightInverted() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    right().apply(right().apply(right().apply(c)))
+    c.rotate(right(),right(),right())
   }
 }
 case class left() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    cubeYInverted().apply(front().apply(cubeY().apply(c)))
+    c.rotate(cubeY(),front(),cubeYInverted())
   }
 }
 case class leftInverted() extends Rotation {
   override def apply(c: RubiksCube):RubiksCube = {
-    left().apply(left().apply(left().apply(c)))
+    c.rotate(left(),left(),left())
   }
 }
 case class back() extends Rotation{
   override def apply(c: RubiksCube):RubiksCube = {
-    cubeY().apply(cubeY().apply(front().apply(cubeY().apply(cubeY().apply(c)))))
+    c.rotate(cubeY(),cubeY(),front(),cubeY(),cubeY())
   }
 }
 case class backInverted() extends Rotation{
   override def apply(c: RubiksCube):RubiksCube = {
-    back().apply(back().apply(back().apply(c)))
+    c.rotate(back(),back(),back())
   }
 }
 
@@ -234,6 +232,20 @@ class RubiksCube (pieces: Array[SimpleCube]) {
 //                    N O P
 //                    Q R S
 //
+
+  lazy val TopCenter = pieces(10)
+  lazy val FrontCenter = pieces(8)
+  lazy val BackCenter = pieces(25)
+  lazy val DownCenter = pieces(14)
+  lazy val LeftCenter = pieces(16)
+  lazy val RightCenter = pieces(12)
+
+  lazy val FrontFacePieces = List(0, 1, 2, 3, 4, 5, 6, 7, 8).map(x=>pieces(x))
+  lazy val TopFacePieces = List(0, 1, 2, 9, 10, 11, 17, 18, 19).map(x=>pieces(x))
+  lazy val BackFacePieces = List(17, 18, 19, 20, 21, 22, 23, 24, 25).map(x=>pieces(x))
+  lazy val DownFacePieces = List(4,5,6,13,14,15,21,22,23).map(x=>pieces(x))
+  lazy val RightFacePieces = List(3,4,5,11,12,13,19,20,21).map(x=>pieces(x))
+  lazy val LeftFacePieces = List(0,6,7,9,15,16,17,23,24).map(x=>pieces(x))
 
   override def toString() : String = {
     val space = " ".padTo(5, ' ')
