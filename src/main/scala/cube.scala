@@ -259,8 +259,8 @@ class RubiksCube (pieces: Array[SimpleCube]) {
 
   val _cube : Array[SimpleCube] = pieces
 
-  def rotate(a:Rotation*) : RubiksCube = a.foldLeft(this)((cube,rotation)=> rotation.apply(cube))
-
+  def rotate(a:Rotation*) : RubiksCube = rotateSeq(a)
+  def rotateSeq(a:Seq[Rotation]) : RubiksCube = a.foldLeft(this)((cube,rotation)=> rotation.apply(cube))
   override def clone() : RubiksCube = {new RubiksCube(_cube.clone())}
 
   def apply(swaps: Seq[Step]): RubiksCube = {
